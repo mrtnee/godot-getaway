@@ -1,0 +1,84 @@
+[gd_scene load_steps=8 format=2]
+
+[ext_resource path="res://Props/Hydrant/FireHydrant.tscn" type="PackedScene" id=1]
+[ext_resource path="res://Props/Hydrant/Hydrant.gd" type="Script" id=2]
+
+[sub_resource type="ParticlesMaterial" id=1]
+emission_shape = 1
+emission_sphere_radius = 0.25
+gravity = Vector3( 0, 9.8, 0 )
+
+[sub_resource type="SpatialMaterial" id=2]
+flags_do_not_receive_shadows = true
+albedo_color = Color( 0.309804, 0.701961, 0.917647, 1 )
+emission_enabled = true
+emission = Color( 0.227451, 0.764706, 0.972549, 1 )
+emission_energy = 1.0
+emission_operator = 0
+emission_on_uv2 = false
+
+[sub_resource type="CapsuleMesh" id=3]
+material = SubResource( 2 )
+radius = 0.125
+mid_height = 0.001
+
+[sub_resource type="CylinderShape" id=4]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="Animation" id=5]
+resource_name = "CarPusher"
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:translation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.5, 1 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector3( 9, -1.2, 9 ), Vector3( 9, 1.20488, 9 ), Vector3( 9, -1.2, 9 ) ]
+}
+
+[node name="Hydrant" type="Spatial"]
+script = ExtResource( 2 )
+
+[node name="FireHydrant" parent="." instance=ExtResource( 1 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 9 )
+contacts_reported = 1
+contact_monitor = true
+sleeping = true
+
+[node name="Particles" type="Particles" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 9 )
+emitting = false
+amount = 512
+lifetime = 1.5
+preprocess = 5.0
+speed_scale = 2.0
+process_material = SubResource( 1 )
+draw_pass_1 = SubResource( 3 )
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 10.0
+one_shot = true
+
+[node name="Area" type="Area" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 9 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Area"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0 )
+shape = SubResource( 4 )
+
+[node name="CarPusher" type="StaticBody" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 9, -1.2, 9 )
+
+[node name="CollisionShape" type="CollisionShape" parent="CarPusher"]
+shape = SubResource( 4 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="CarPusher"]
+anims/CarPusher = SubResource( 5 )
+[connection signal="sleeping_state_changed" from="FireHydrant" to="." method="_on_FireHydrant__sleeping_state_changed"]
+[connection signal="timeout" from="Timer" to="." method="_on_Timer_timeout"]
+[connection signal="body_entered" from="Area" to="." method="_on_Area_body_entered"]
